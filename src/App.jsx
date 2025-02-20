@@ -25,7 +25,10 @@ export default function AIChat() {
   // }, []);
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim()) {
+      alert("Please enter some text.");
+      return;
+    }
 
     const newMessage = {
       text: input,
