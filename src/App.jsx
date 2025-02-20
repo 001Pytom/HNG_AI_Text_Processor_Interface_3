@@ -15,6 +15,10 @@ export default function AIChat() {
       "Create Translator Available:",
       self.translation?.createTranslator ? true : false
     );
+    console.log(
+      "Summarizer Available:",
+      self.ai?.summarizer?.create ? true : false
+    );
     if (!("translation" in self) || !self.translation?.createTranslator) {
       console.error("Translation API not fully supported");
     }
@@ -29,7 +33,7 @@ export default function AIChat() {
       summary: "",
       translation: "",
     };
-    
+
     setMessages([...messages, newMessage]);
     setInput("");
 
@@ -74,12 +78,40 @@ export default function AIChat() {
 
   const summarizeText = async (index) => {
     try {
-      if (self.ai && self.ai.summarizer?.create) {
-        const summarizer = await self.ai.summarizer.create();
-        const summary = await summarizer.summarize(messages[index].text);
-        messages[index].summary = summary;
-      } else {
+      if (!self.ai?.summarizer) {
         throw new Error("Summarizer API not available");
+      }
+
+      const capabilities = await self.ai.summarizer.capabilities();
+      const available = capabilities.available;
+      let summarizer;
+      const options = {
+        type: "key-points",
+        format: "markdown",
+        length: "medium",
+      };
+
+      if (available === "no") {
+        console.warn("Summarization not possible on this device.");
+        messages[index].summary = "Summarization unavailable";
+      } else if (available === "readily") {
+        summarizer = await self.ai.summarizer.create(options);
+      } else {
+        summarizer = await self.ai.summarizer.create({
+          ...options,
+          monitor(m) {
+            m.addEventListener("downloadprogress", (e) => {
+              console.log(`Downloaded ${e.loaded} of ${e.total} bytes.`);
+            });
+          },
+        });
+        await summarizer.ready;
+      }
+
+      if (summarizer) {
+        messages[index].summary = await summarizer.summarize(
+          messages[index].text
+        );
       }
     } catch (error) {
       console.error("Summarization error:", error);
