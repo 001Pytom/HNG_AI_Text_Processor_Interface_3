@@ -4,25 +4,25 @@ export default function AIChat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  useEffect(() => {
-    console.log("Checking API availability...");
-    console.log("Translation API Available:", "translation" in self);
-    console.log(
-      "Create Detector Available:",
-      self.ai?.languageDetector?.create ? true : false
-    );
-    console.log(
-      "Create Translator Available:",
-      self.translation?.createTranslator ? true : false
-    );
-    console.log(
-      "Summarizer Available:",
-      self.ai?.summarizer?.create ? true : false
-    );
-    if (!("translation" in self) || !self.translation?.createTranslator) {
-      console.error("Translation API not fully supported");
-    }
-  }, []);
+  // useEffect(() => {
+  //   console.log("Checking API availability...");
+  //   console.log("Translation API Available:", "translation" in self);
+  //   console.log(
+  //     "Create Detector Available:",
+  //     self.ai?.languageDetector?.create ? true : false
+  //   );
+  //   console.log(
+  //     "Create Translator Available:",
+  //     self.translation?.createTranslator ? true : false
+  //   );
+  //   console.log(
+  //     "Summarizer Available:",
+  //     self.ai?.summarizer?.create ? true : false
+  //   );
+  //   if (!("translation" in self) || !self.translation?.createTranslator) {
+  //     console.error("Translation API not fully supported");
+  //   }
+  // }, []);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -71,7 +71,7 @@ export default function AIChat() {
       }
     } catch (error) {
       console.error("Language detection error:", error);
-      newMessage.language = "Error detecting language";
+      newMessage.language = `Error detecting language: ${error.message}"`;
     }
     setMessages([...messages, newMessage]);
   };
@@ -93,7 +93,7 @@ export default function AIChat() {
 
       if (available === "no") {
         console.warn("Summarization not possible on this device.");
-        messages[index].summary = "Summarization unavailable";
+        messages[index].summary = "Summarization unavailable on this device";
       } else if (available === "readily") {
         summarizer = await self.ai.summarizer.create(options);
       } else {
@@ -115,7 +115,7 @@ export default function AIChat() {
       }
     } catch (error) {
       console.error("Summarization error:", error);
-      messages[index].summary = "Error summarizing text";
+      messages[index].summary = `Error summarizing text ${error.message} `;
     }
     setMessages([...messages]);
   };
@@ -135,18 +135,25 @@ export default function AIChat() {
       }
     } catch (error) {
       console.error("Translation error:", error);
-      messages[index].translation = "Error translating text";
+      messages[index].translation = `Error translating text: ${error.message}`;
     }
     setMessages([...messages]);
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
+      <h1 className="text-center text-2xl font-bold p-4 border-b border-gray-700">
+        AI Text Processor
+      </h1>
+
       <div className="flex-grow p-4 overflow-y-auto">
         {messages.map((msg, index) => (
           <div key={index} className="mb-4 p-3 bg-gray-800 rounded-lg">
             <p>{msg.text}</p>
-            <p className="text-sm text-gray-400">Language: {msg.language}</p>
+            <p className="text-sm text-gray-400">
+              {" "}
+              Detected {msg.language} Language{" "}
+            </p>
             {msg.text.length > 150 && msg.language === "en" && (
               <button
                 className="mt-2 bg-yellow-500 text-black px-3 py-1 rounded-md"
